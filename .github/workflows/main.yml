@@ -1,5 +1,6 @@
 name: CI devops 2025
 on:
+  # Lance le pipeline sur les branches main et develop
   push:
     branches:
       - main
@@ -7,6 +8,7 @@ on:
   pull_request:
 
 jobs:
+  # Compile et teste le backend
   test-backend:
     runs-on: ubuntu-24.04
     steps:
@@ -23,3 +25,42 @@ jobs:
       # Compile et lance les tests (unitaires + intégration avec Testcontainers)
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
+
+  # Construit et publie les images Docker
+  build-and-push-docker-image:
+    # Ne se lance que si les tests du backend sont passés
+    needs: test-backend
+    runs-on: ubuntu-24.04
+
+    steps:
+      # Récupère le code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Connexion à Docker Hub avec les secrets GitHub (jamais en clair)
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      # Build de l'image du backend, push uniquement sur main
+      - name: Build image and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./simple-api
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      # Build de l'image de la base, push uniquement sur main
+      - name: Build image and push database
+        uses: docker/build-push-action@v6
+        with:
+          context: ./database
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      # Build de l'image du serveur HTTP, push uniquement sur main
+      - name: Build image and push httpd
+        uses: docker/build-push-action@v6
+        with:
+          context: ./httpd
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
+          push: ${{ github.ref == 'refs/heads/main' }}
