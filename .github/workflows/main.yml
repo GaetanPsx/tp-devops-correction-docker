@@ -26,9 +26,9 @@ jobs:
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
 
-      # Analyse de la qualité du code avec SonarCloud (Quality Gate)
+            # Analyse de la qualité du code avec SonarCloud (Quality Gate)
       - name: SonarCloud analysis
-        run: mvn -B verify sonar:sonar -Dsonar.projectKey=GaetanPsx_tp-devops-correction-docker -Dsonar.organization=gaetanpsx -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }} --file ./simple-api/pom.xml
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=GaetanPsx_tp-devops-correction-docker -Dsonar.organization=gaetanpsx -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }} --file ./simple-api/pom.xml
 
   # Construit et publie les images Docker
   build-and-push-docker-image:
