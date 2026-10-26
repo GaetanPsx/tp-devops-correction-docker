@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  # Compile et teste le backend
+  # Compile, teste et analyse le backend
   test-backend:
     runs-on: ubuntu-24.04
     steps:
@@ -26,9 +26,13 @@ jobs:
       - name: Build and test with Maven
         run: mvn clean verify --file ./simple-api/pom.xml
 
+      # Analyse de la qualité du code avec SonarCloud (Quality Gate)
+      - name: SonarCloud analysis
+        run: mvn -B verify sonar:sonar -Dsonar.projectKey=GaetanPsx_tp-devops-correction-docker -Dsonar.organization=gaetanpsx -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }} --file ./simple-api/pom.xml
+
   # Construit et publie les images Docker
   build-and-push-docker-image:
-    # Ne se lance que si les tests du backend sont passés
+    # Ne se lance que si les tests et l'analyse du backend sont passés
     needs: test-backend
     runs-on: ubuntu-24.04
 
@@ -39,7 +43,10 @@ jobs:
 
       # Connexion à Docker Hub avec les secrets GitHub (jamais en clair)
       - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Build de l'image du backend, push uniquement sur main
       - name: Build image and push backend
@@ -57,7 +64,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
-            # Build de l'image du serveur HTTP, push uniquement sur main
+      # Build de l'image du serveur HTTP, push uniquement sur main
       - name: Build image and push httpd
         uses: docker/build-push-action@v6
         with:
