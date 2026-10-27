@@ -1,0 +1,15 @@
+---
+# Lancer l'API ; elle trouve la base via le nom "database" sur le réseau
+- name: Run backend API
+  community.docker.docker_container:
+    name: simple-api
+    image: gaetanpsxx/tp-devops-simple-api:latest
+    pull: true
+    restart_policy: unless-stopped
+    networks:
+      - name: app-network
+    env:
+      DATABASE_HOST: database
+      DATABASE_PASSWORD: pwd
+  vars:
+    ansible_python_interpreter: /opt/docker_venv/bin/python

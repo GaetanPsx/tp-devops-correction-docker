@@ -3,4 +3,8 @@
   become: true
 
   roles:
-    - docker
+    - docker      # installer Docker
+    - network     # créer le réseau
+    - database    # lancer la base
+    - app         # lancer l'API
+    - proxy       # lancer le reverse proxy
