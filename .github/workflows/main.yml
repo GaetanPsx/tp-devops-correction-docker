@@ -72,6 +72,15 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
+
+                # Build de l'image du front, push uniquement sur main
+      - name: Build image and push front
+        uses: docker/build-push-action@v6
+        with:
+          context: ./front
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-front:latest
+          push: ${{ github.ref == 'refs/heads/main' }}
+
     # Déploie l'application sur le serveur avec Ansible
   deploy:
     # Ne se lance que si les images ont été construites et publiées

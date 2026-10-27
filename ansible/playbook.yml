@@ -7,4 +7,5 @@
     - network     # créer le réseau
     - database    # lancer la base
     - app         # lancer l'API
+    - front       # lancer le front
     - proxy       # lancer le reverse proxy

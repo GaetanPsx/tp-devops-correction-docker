@@ -1,0 +1,12 @@
+---
+# Lancer le front (Vue.js servi par nginx), joignable par Apache via le nom "front"
+- name: Run front
+  community.docker.docker_container:
+    name: front
+    image: gaetanpsxx/tp-devops-front:latest
+    pull: true
+    restart_policy: unless-stopped
+    networks:
+      - name: app-network
+  vars:
+    ansible_python_interpreter: /opt/docker_venv/bin/python
