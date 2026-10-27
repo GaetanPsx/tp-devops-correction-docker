@@ -71,3 +71,36 @@ jobs:
           context: ./http-server
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
           push: ${{ github.ref == 'refs/heads/main' }}
+
+    # Déploie l'application sur le serveur avec Ansible
+  deploy:
+    # Ne se lance que si les images ont été construites et publiées
+    needs: build-and-push-docker-image
+    # Déploiement uniquement depuis la branche main
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+
+    steps:
+      # Récupère le code (dont le dossier ansible)
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Installe Ansible et la collection Docker à jour
+      - name: Install Ansible
+        run: |
+          pipx install --include-deps ansible
+          ansible-galaxy collection install community.docker --upgrade
+
+      # Écrit la clé SSH du serveur depuis le secret GitHub
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/takima_key
+          chmod 400 ~/.ssh/takima_key
+
+      # Lance le playbook : récupère les nouvelles images et relance les conteneurs
+      - name: Run Ansible playbook
+        working-directory: ./ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: ansible-playbook -i inventories/setup.yml playbook.yml -e ansible_ssh_private_key_file=~/.ssh/takima_key        
